@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../app_role.dart';
 import '../main.dart';
 import '../notifications.dart';
 import 'customers_screen.dart';
 import 'enquiry_chat_screen.dart';
 import 'owner_pin_screen.dart';
+import 'role_gate.dart';
 
 /// BUSINESS OWNER portal: live list of customer enquiries.
 ///
@@ -122,6 +124,29 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.swap_horiz),
+            tooltip: 'Switch role',
+            onPressed: () async {
+              // Only the owner (who knows the PIN) can switch this
+              // phone back to the role picker.
+              final navigator = Navigator.of(context);
+              final ok = await navigator.push<bool>(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      const OwnerPinScreen(mode: OwnerPinMode.verify),
+                ),
+              );
+              if (ok == true && mounted) {
+                await AppRole.clear();
+                if (!mounted) return;
+                navigator.pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const RoleGate()),
+                  (_) => false,
+                );
+              }
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.lock_outline),
             tooltip: 'Change PIN',
             onPressed: () async {
@@ -155,6 +180,18 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
       ),
       body: Column(
         children: [
+          // Live push status — if an enquiry push ever goes missing,
+          // this line says on the phone itself where it got stuck.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: ValueListenableBuilder<String>(
+              valueListenable: PushNotifications.statusNotifier,
+              builder: (context, status, _) => Text(
+                'Notifications: $status',
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            ),
+          ),
           if (_latestNewName != null)
             Container(
               width: double.infinity,

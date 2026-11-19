@@ -5,17 +5,27 @@ available?" with a photo, and the business owner replies inside the app.
 
 ## What it does
 
-**Customer portal** ("I am a Customer")
+One app, two sides — on first launch the phone asks "who is using this
+phone?" and remembers the choice, so the owner only ever sees the owner
+portal and customers only ever see the customer portal. (The swap icon
+in the AppBar switches role again; the owner side asks for the PIN first.)
+
+**Customer portal**
 - Take a photo or pick one from the gallery
 - Write a short description, name, and mobile number
 - Submit → the enquiry is saved, and the customer sees the owner's replies
+- "My queries" lists the customer's past enquiries, so going back never
+  loses one
 
-**Business owner portal** ("I am the Business Owner")
+**Business owner portal** (protected by a 4-digit PIN, set on first visit)
 - Live list of enquiries — a new enquiry appears at the top **instantly**,
   with a notification banner, a red badge, and a pop-up message
 - Open an enquiry to see the photo, description, name, and mobile
-  (tap the phone icon to call the customer)
+  (tap the phone icon to call the customer; tap the photo to view it
+  full-screen and pinch to zoom)
 - Chat with the customer in the app — e.g. "yes, available, Rs 1,200"
+- Status tracking (NEW / REPLIED / DONE) with filter chips, and a
+  Customers list grouped by mobile number
 
 ## Honest note about notifications
 
@@ -97,7 +107,10 @@ repo's **Actions** tab.
 - `lib/main.dart` — app start, Supabase + push init
 - `lib/notifications.dart` — FCM token, foreground/background push display
 - `lib/config.dart` — Supabase URL + anon key (placeholders)
-- `lib/screens/home_screen.dart` — role switch (Customer / Owner)
+- `lib/app_role.dart` — the phone's saved role (customer / owner)
+- `lib/screens/role_gate.dart` — first screen: opens the saved portal
+- `lib/screens/role_pick_screen.dart` — first-run "who is using this phone?"
+- `lib/screens/customer_home_screen.dart` — customer portal home
 - `lib/screens/customer_enquiry_screen.dart` — photo + enquiry form
 - `lib/screens/enquiry_chat_screen.dart` — chat thread (both sides)
 - `lib/screens/owner_list_screen.dart` — live enquiry list + alerts
