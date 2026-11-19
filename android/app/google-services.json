@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "191340638895",
+    "project_id": "free-934cc",
+    "storage_bucket": "free-934cc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:191340638895:android:aef3598c7ea2ada3319a5a",
+        "android_client_info": {
+          "package_name": "com.automatebusinesssolutions.productenquiry_demo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEPnIl5RfUn1cBBSBUPrFjW_OtR4CtyO4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

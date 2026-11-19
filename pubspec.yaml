@@ -1,0 +1,25 @@
+name: product_enquiry_demo
+description: "Demo app: customers ask if a product is available, the business owner replies in-app."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.8.0
+  image_picker: ^1.1.2
+  url_launcher: ^6.3.0
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.0
+  flutter_local_notifications: ^18.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
