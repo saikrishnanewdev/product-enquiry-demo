@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../app_role.dart';
 import '../config.dart';
+import '../main.dart';
 import '../owner_pin.dart';
 import 'customer_home_screen.dart';
+import 'owner_change_password_screen.dart';
 import 'owner_list_screen.dart';
+import 'owner_login_screen.dart';
 import 'owner_pin_screen.dart';
 import 'role_pick_screen.dart';
 
@@ -63,9 +66,16 @@ class RoleGate extends StatelessWidget {
   }
 }
 
-/// Owner entry: asks for the 4-digit PIN first, then shows the
-/// enquiries list. If the user backs out of the PIN screen, the
-/// saved role is cleared so the picker shows again.
+/// Owner entry: sign in, then the PIN, then the enquiries list.
+///
+/// 1. If there is no Supabase Auth session yet, the owner signs in
+///    with email + password (checked on the server — this is what
+///    stops anyone from claiming the owner side).
+/// 2. A first sign-in with the demo password forces a password
+///    change before entering.
+/// 3. The 4-digit PIN is the quick unlock after that; the owner
+///    stays signed in, so the password is not asked every time.
+/// Backing out of any step forgets the role and shows the picker.
 class OwnerGate extends StatefulWidget {
   const OwnerGate({super.key});
 
@@ -79,11 +89,48 @@ class _OwnerGateState extends State<OwnerGate> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _askPin());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _enterOwner());
   }
 
-  Future<void> _askPin() async {
+  Future<void> _backToPicker() async {
+    await AppRole.clear();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const RoleGate()),
+      (_) => false,
+    );
+  }
+
+  Future<void> _enterOwner() async {
     final navigator = Navigator.of(context);
+    // 1. Sign in if there is no session yet.
+    if (supabase.auth.currentSession == null) {
+      final signedIn = await navigator.push<bool>(
+        MaterialPageRoute(builder: (_) => const OwnerLoginScreen()),
+      );
+      if (signedIn != true || !mounted) {
+        await _backToPicker();
+        return;
+      }
+      // 2. First sign-in with the demo password: force a change.
+      final mustChange = supabase.auth.currentUser?.userMetadata?[
+              'must_change_password'] ==
+          true;
+      if (mustChange) {
+        final changed = await navigator.push<bool>(
+          MaterialPageRoute(
+            builder: (_) =>
+                const OwnerChangePasswordScreen(forced: true),
+          ),
+        );
+        if (changed != true || !mounted) {
+          await supabase.auth.signOut();
+          await _backToPicker();
+          return;
+        }
+      }
+    }
+    // 3. Quick unlock with the 4-digit PIN.
     final hasPin = await OwnerPin.hasPin();
     final ok = await navigator.push<bool>(
       MaterialPageRoute(
@@ -96,12 +143,7 @@ class _OwnerGateState extends State<OwnerGate> {
     if (ok == true) {
       setState(() => _unlocked = true);
     } else {
-      await AppRole.clear();
-      if (!mounted) return;
-      navigator.pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const RoleGate()),
-        (_) => false,
-      );
+      await _backToPicker();
     }
   }
 

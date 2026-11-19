@@ -17,7 +17,9 @@ in the AppBar switches role again; the owner side asks for the PIN first.)
 - "My queries" lists the customer's past enquiries, so going back never
   loses one
 
-**Business owner portal** (protected by a 4-digit PIN, set on first visit)
+**Business owner portal** — sign in with email + password (checked by
+Supabase Auth; demo: admin@productenquiry.demo / admin@123 — the first
+sign-in forces a password change), then a 4-digit PIN as a quick unlock
 - Live list of enquiries — a new enquiry appears at the top **instantly**,
   with a notification banner, a red badge, and a pop-up message
 - Open an enquiry to see the photo, description, name, and mobile

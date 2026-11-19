@@ -4,6 +4,7 @@ import '../main.dart';
 import '../notifications.dart';
 import 'customers_screen.dart';
 import 'enquiry_chat_screen.dart';
+import 'owner_change_password_screen.dart';
 import 'owner_pin_screen.dart';
 import 'role_gate.dart';
 
@@ -123,20 +124,43 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.swap_horiz),
-            tooltip: 'Switch role',
-            onPressed: () async {
-              // Only the owner (who knows the PIN) can switch this
-              // phone back to the role picker.
+          PopupMenuButton<String>(
+            tooltip: 'Owner options',
+            onSelected: (value) async {
               final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              if (value == 'password') {
+                final changed = await navigator.push<bool>(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const OwnerChangePasswordScreen(forced: false),
+                  ),
+                );
+                if (changed == true && mounted) {
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('Password changed.')),
+                  );
+                }
+                return;
+              }
+              // Change PIN and Switch role both need the current PIN
+              // first — only the owner can do them.
               final ok = await navigator.push<bool>(
                 MaterialPageRoute(
                   builder: (_) =>
                       const OwnerPinScreen(mode: OwnerPinMode.verify),
                 ),
               );
-              if (ok == true && mounted) {
+              if (ok != true || !mounted) return;
+              if (value == 'pin') {
+                navigator.push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const OwnerPinScreen(mode: OwnerPinMode.set),
+                  ),
+                );
+              } else if (value == 'switch') {
+                await supabase.auth.signOut();
                 await AppRole.clear();
                 if (!mounted) return;
                 navigator.pushAndRemoveUntil(
@@ -145,27 +169,20 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
                 );
               }
             },
-          ),
-          IconButton(
-            icon: const Icon(Icons.lock_outline),
-            tooltip: 'Change PIN',
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              final ok = await navigator.push<bool>(
-                MaterialPageRoute(
-                  builder: (_) =>
-                      const OwnerPinScreen(mode: OwnerPinMode.verify),
-                ),
-              );
-              if (ok == true && mounted) {
-                navigator.push(
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        const OwnerPinScreen(mode: OwnerPinMode.set),
-                  ),
-                );
-              }
-            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: 'password',
+                child: Text('Change password'),
+              ),
+              PopupMenuItem(
+                value: 'pin',
+                child: Text('Change PIN'),
+              ),
+              PopupMenuItem(
+                value: 'switch',
+                child: Text('Switch role'),
+              ),
+            ],
           ),
           if (widget.customerMobile == null)
             IconButton(
