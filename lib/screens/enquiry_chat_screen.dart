@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
+import '../theme.dart';
 
 enum ChatRole { customer, owner }
 
@@ -109,7 +110,7 @@ class _EnquiryChatScreenState extends State<EnquiryChatScreen> {
   Widget build(BuildContext context) {
     final enquiry = _enquiry;
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppTheme.gradientAppBar(
         title: Text(widget.title),
         actions: [
           if (_isOwner && enquiry != null)
@@ -166,7 +167,7 @@ class _EnquiryChatScreenState extends State<EnquiryChatScreen> {
                       _isOwner
                           ? 'No replies yet. Say hello and answer below.'
                           : 'Waiting for the shop to reply...',
-                      style: const TextStyle(color: Colors.black54),
+                      style: const TextStyle(color: AppTheme.body),
                     ),
                   );
                 }
@@ -176,6 +177,10 @@ class _EnquiryChatScreenState extends State<EnquiryChatScreen> {
                   itemBuilder: (context, index) {
                     final msg = messages[index];
                     final mine = msg['sender'] == _sender;
+                    // The two sides stay distinguishable at a glance:
+                    // the owner's messages are navy, the customer's
+                    // are teal-tinted — whichever side is viewing.
+                    final isOwnerMsg = msg['sender'] == 'owner';
                     return Align(
                       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
                       child: Container(
@@ -185,13 +190,17 @@ class _EnquiryChatScreenState extends State<EnquiryChatScreen> {
                           maxWidth: MediaQuery.of(context).size.width * 0.75,
                         ),
                         decoration: BoxDecoration(
-                          color: mine ? Colors.teal : Colors.grey.shade200,
+                          color: isOwnerMsg
+                              ? AppTheme.navy
+                              : AppTheme.teal.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
                           msg['message'] as String? ?? '',
                           style: TextStyle(
-                            color: mine ? Colors.white : Colors.black87,
+                            color: isOwnerMsg
+                                ? Colors.white
+                                : AppTheme.heading,
                             fontSize: 15,
                           ),
                         ),
@@ -215,7 +224,9 @@ class _EnquiryChatScreenState extends State<EnquiryChatScreen> {
                         hintText: _isOwner
                             ? 'Reply: yes, available, Rs...'
                             : 'Write a message...',
-                        border: const OutlineInputBorder(),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 14,
                           vertical: 10,
@@ -275,8 +286,9 @@ class _EnquiryHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final photoUrl = enquiry['photo_url'] as String?;
     return Container(
+      margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       padding: const EdgeInsets.all(12),
-      color: Colors.teal.shade50,
+      decoration: AppTheme.cardDecoration,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -306,12 +318,16 @@ class _EnquiryHeader extends StatelessWidget {
               children: [
                 Text(
                   enquiry['description'] as String? ?? '',
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: AppTheme.heading,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '${enquiry['customer_name'] ?? ''}  •  ${enquiry['mobile'] ?? ''}',
-                  style: const TextStyle(color: Colors.black54),
+                  style: const TextStyle(color: AppTheme.body),
                 ),
               ],
             ),

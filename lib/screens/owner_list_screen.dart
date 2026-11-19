@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../app_role.dart';
 import '../main.dart';
 import '../notifications.dart';
+import '../theme.dart';
 import 'customers_screen.dart';
 import 'enquiry_chat_screen.dart';
 import 'owner_change_password_screen.dart';
@@ -85,7 +86,6 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
           content: Text(
             'New enquiry from ${_latestNewName ?? 'a customer'}! Tap to view.',
           ),
-          backgroundColor: Colors.teal,
           duration: const Duration(seconds: 4),
         ),
       );
@@ -106,7 +106,7 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppTheme.gradientAppBar(
         title: Row(
           children: [
             Text(widget.customerName ?? 'Customer enquiries'),
@@ -205,7 +205,7 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
               valueListenable: PushNotifications.statusNotifier,
               builder: (context, status, _) => Text(
                 'Notifications: $status',
-                style: const TextStyle(fontSize: 12, color: Colors.black54),
+                style: const TextStyle(fontSize: 12, color: AppTheme.body),
               ),
             ),
           ),
@@ -246,6 +246,15 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
                           ? 'All'
                           : f[0].toUpperCase() + f.substring(1)),
                       selected: _statusFilter == f,
+                      selectedColor: AppTheme.navy,
+                      labelStyle: TextStyle(
+                        color: _statusFilter == f
+                            ? Colors.white
+                            : AppTheme.body,
+                        fontWeight: _statusFilter == f
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
                       onSelected: (_) =>
                           setState(() => _statusFilter = f),
                     ),
@@ -287,73 +296,106 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
                             ? 'No enquiries yet.\nWhen a customer asks about a product, it will appear here instantly.'
                             : 'No $_statusFilter enquiries.',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 16, color: Colors.black54),
+                        style: const TextStyle(
+                            fontSize: 16, color: AppTheme.body),
                       ),
                     ),
                   );
                 }
-                return ListView.separated(
+                return ListView.builder(
+                  padding: const EdgeInsets.all(12),
                   itemCount: visible.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final e = visible[index];
                     final photoUrl = e['photo_url'] as String?;
-                    return ListTile(
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: photoUrl != null && photoUrl.isNotEmpty
-                            ? Image.network(
-                                photoUrl,
-                                width: 56,
-                                height: 56,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const SizedBox(
-                                  width: 56,
-                                  height: 56,
-                                  child: Icon(Icons.image),
-                                ),
-                              )
-                            : const SizedBox(
-                                width: 56,
-                                height: 56,
-                                child: Icon(Icons.image),
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: AppTheme.cardDecoration,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          setState(() {
+                            if (_newCount > 0) _newCount--;
+                          });
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => EnquiryChatScreen(
+                                enquiryId: e['id'] as String,
+                                role: ChatRole.owner,
+                                title: e['customer_name'] as String? ?? 'Enquiry',
                               ),
-                      ),
-                      title: Text(
-                        e['customer_name'] as String? ?? 'Customer',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Text(
-                        e['description'] as String? ?? '',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            _timeAgo(e['created_at'] as String?),
-                            style: const TextStyle(fontSize: 12, color: Colors.black54),
-                          ),
-                          const SizedBox(height: 4),
-                          _statusPill(e['status'] as String?),
-                        ],
-                      ),
-                      onTap: () {
-                        setState(() {
-                          if (_newCount > 0) _newCount--;
-                        });
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => EnquiryChatScreen(
-                              enquiryId: e['id'] as String,
-                              role: ChatRole.owner,
-                              title: e['customer_name'] as String? ?? 'Enquiry',
                             ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: photoUrl != null && photoUrl.isNotEmpty
+                                    ? Image.network(
+                                        photoUrl,
+                                        width: 64,
+                                        height: 64,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) =>
+                                            const SizedBox(
+                                          width: 64,
+                                          height: 64,
+                                          child: Icon(Icons.image),
+                                        ),
+                                      )
+                                    : const SizedBox(
+                                        width: 64,
+                                        height: 64,
+                                        child: Icon(Icons.image),
+                                      ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      e['customer_name'] as String? ??
+                                          'Customer',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                        color: AppTheme.heading,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      e['description'] as String? ?? '',
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          color: AppTheme.body),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    _timeAgo(e['created_at'] as String?),
+                                    style: const TextStyle(
+                                        fontSize: 12, color: AppTheme.body),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  _statusPill(e['status'] as String?),
+                                ],
+                              ),
+                            ],
                           ),
-                        );
-                      },
+                        ),
+                      ),
                     );
                   },
                 );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main.dart';
+import '../theme.dart';
 
 /// Change the owner's password.
 ///
@@ -82,66 +83,85 @@ class _OwnerChangePasswordScreenState
     return PopScope(
       canPop: !widget.forced,
       child: Scaffold(
-        appBar: AppBar(title: const Text('Change password')),
-        body: Padding(
-          padding: const EdgeInsets.all(24),
+        appBar: AppTheme.gradientAppBar(
+          title: const Text('Change password'),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(Icons.key, size: 64, color: Colors.teal),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  gradient: AppTheme.headerGradient,
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.key, size: 48, color: Colors.white),
+                    const SizedBox(height: 12),
+                    Text(
+                      widget.forced
+                          ? 'You signed in with the demo password. Choose a new password to continue.'
+                          : 'Choose a new password for the owner account.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 16),
-              Text(
-                widget.forced
-                    ? 'You signed in with the demo password. Choose a new password to continue.'
-                    : 'Choose a new password for the owner account.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: AppTheme.cardDecoration,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: _newController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'New password',
+                      ),
+                      onSubmitted: (_) => _change(),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _confirmController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Confirm new password',
+                      ),
+                      onSubmitted: (_) => _change(),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    GradientButton(
+                      label: 'Change password',
+                      onPressed: _busy ? null : _change,
+                      busy: _busy,
+                    ),
+                    if (widget.forced) ...[
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: _busy ? null : _cancelAndSignOut,
+                        child: const Text('Cancel and sign out'),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: _newController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'New password',
-                  border: OutlineInputBorder(),
-                ),
-                onSubmitted: (_) => _change(),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _confirmController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Confirm new password',
-                  border: OutlineInputBorder(),
-                ),
-                onSubmitted: (_) => _change(),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  _error!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              ],
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _busy ? null : _change,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  child: Text('Change password',
-                      style: TextStyle(fontSize: 18)),
-                ),
-              ),
-              if (widget.forced) ...[
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: _busy ? null : _cancelAndSignOut,
-                  child: const Text('Cancel and sign out'),
-                ),
-              ],
             ],
           ),
         ),

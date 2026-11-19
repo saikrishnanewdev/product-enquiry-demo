@@ -3,6 +3,7 @@ import '../app_role.dart';
 import '../config.dart';
 import '../main.dart';
 import '../owner_pin.dart';
+import '../theme.dart';
 import 'customer_home_screen.dart';
 import 'owner_change_password_screen.dart';
 import 'owner_list_screen.dart';
@@ -22,25 +23,31 @@ class RoleGate extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!AppConfig.isConfigured) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Product Enquiry Demo')),
+        appBar: AppTheme.gradientAppBar(
+          title: const Text('Product Enquiry Demo'),
+        ),
         body: const Padding(
           padding: EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.settings, size: 48, color: Colors.teal),
+              Icon(Icons.settings, size: 48, color: AppTheme.navy),
               SizedBox(height: 16),
               Text(
                 'Setup needed',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.heading,
+                ),
               ),
               SizedBox(height: 8),
               Text(
                 'Open lib/config.dart and fill in your Supabase URL and anon key, '
                 'then run supabase-setup.sql in your Supabase SQL Editor. '
                 'See README.md for the steps.',
-                style: TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: 16, color: AppTheme.body),
               ),
             ],
           ),

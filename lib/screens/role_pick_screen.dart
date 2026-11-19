@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../app_role.dart';
+import '../theme.dart';
 import 'customer_home_screen.dart';
 import 'role_gate.dart';
 
@@ -26,35 +27,50 @@ class RolePickScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Product Enquiry Demo')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
+      appBar: AppTheme.gradientAppBar(
+        title: const Text('Product Enquiry Demo'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(Icons.storefront, size: 64, color: Colors.teal),
-            const SizedBox(height: 16),
-            const Text(
-              'Who is using this phone?',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Pick once — the app remembers and opens straight into that side from then on.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: Colors.black54),
-            ),
-            const SizedBox(height: 32),
-            FilledButton.icon(
-              onPressed: () => _pick(context, AppRole.customer),
-              icon: const Icon(Icons.person),
-              label: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child:
-                    Text('I am a Customer', style: TextStyle(fontSize: 18)),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                gradient: AppTheme.headerGradient,
+                borderRadius: BorderRadius.all(Radius.circular(16)),
               ),
+              child: Column(
+                children: [
+                  const Icon(Icons.storefront, size: 56, color: Colors.white),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Who is using this phone?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Pick once — the app remembers and opens straight into that side from then on.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.white.withOpacity(0.85),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            GradientButton(
+              icon: Icons.person,
+              label: 'I am a Customer',
+              onPressed: () => _pick(context, AppRole.customer),
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(

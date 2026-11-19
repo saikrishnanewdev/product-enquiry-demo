@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main.dart';
 import '../my_enquiries.dart';
 import '../notifications.dart';
+import '../theme.dart';
 import 'enquiry_chat_screen.dart';
 
 /// CUSTOMER portal: photo + "is this available?" + name + mobile.
@@ -158,7 +159,9 @@ class _CustomerEnquiryScreenState extends State<CustomerEnquiryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Ask about a product')),
+      appBar: AppTheme.gradientAppBar(
+        title: const Text('Ask about a product'),
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -169,18 +172,29 @@ class _CustomerEnquiryScreenState extends State<CustomerEnquiryScreen> {
               child: Container(
                 height: 200,
                 decoration: BoxDecoration(
-                  color: Colors.teal.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.teal.shade200),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.teal.withOpacity(0.4)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: _photo == null
                     ? const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add_a_photo, size: 48, color: Colors.teal),
+                          Icon(Icons.add_a_photo,
+                              size: 48, color: AppTheme.teal),
                           SizedBox(height: 8),
-                          Text('Tap to add a photo of the product'),
+                          Text(
+                            'Tap to add a photo of the product',
+                            style: TextStyle(color: AppTheme.body),
+                          ),
                         ],
                       )
                     : Stack(
@@ -206,7 +220,6 @@ class _CustomerEnquiryScreenState extends State<CustomerEnquiryScreen> {
               decoration: const InputDecoration(
                 labelText: 'What do you want to ask?',
                 hintText: 'e.g. Is this chair available? What is the price?',
-                border: OutlineInputBorder(),
               ),
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? 'Write a short description.' : null,
@@ -216,7 +229,6 @@ class _CustomerEnquiryScreenState extends State<CustomerEnquiryScreen> {
               controller: _nameController,
               decoration: const InputDecoration(
                 labelText: 'Your name',
-                border: OutlineInputBorder(),
               ),
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? 'Enter your name.' : null,
@@ -228,7 +240,6 @@ class _CustomerEnquiryScreenState extends State<CustomerEnquiryScreen> {
               decoration: const InputDecoration(
                 labelText: 'Mobile number',
                 hintText: '10-digit mobile number',
-                border: OutlineInputBorder(),
               ),
               validator: (v) {
                 final digits = (v ?? '').replaceAll(RegExp(r'\D'), '');
@@ -237,18 +248,10 @@ class _CustomerEnquiryScreenState extends State<CustomerEnquiryScreen> {
               },
             ),
             const SizedBox(height: 24),
-            FilledButton(
+            GradientButton(
+              label: 'Send enquiry',
               onPressed: _sending ? null : _submit,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: _sending
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Send enquiry', style: TextStyle(fontSize: 18)),
-              ),
+              busy: _sending,
             ),
           ],
         ),

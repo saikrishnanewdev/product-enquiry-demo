@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
+import '../theme.dart';
 import 'owner_list_screen.dart';
 
 /// CUSTOMERS screen (owner only): every customer who ever asked,
@@ -24,7 +25,7 @@ class CustomersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Customers')),
+      appBar: AppTheme.gradientAppBar(title: const Text('Customers')),
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: supabase.from('enquiries').stream(primaryKey: ['id']),
         builder: (context, snapshot) {
@@ -59,15 +60,15 @@ class CustomersScreen extends StatelessWidget {
                 child: Text(
                   'No customers yet.\nWhen someone asks about a product, they will appear here.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.black54),
+                  style: TextStyle(fontSize: 16, color: AppTheme.body),
                 ),
               ),
             );
           }
 
-          return ListView.separated(
+          return ListView.builder(
+            padding: const EdgeInsets.all(12),
             itemCount: groups.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final group = groups[index];
               final latest = group.value.first;
@@ -75,43 +76,71 @@ class CustomersScreen extends StatelessWidget {
                   (latest['customer_name'] as String?) ?? 'Customer';
               final count = group.value.length;
               final latestStatus = latest['status'] as String?;
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.teal,
-                  child: Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: const TextStyle(color: Colors.white),
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: AppTheme.cardDecoration,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => OwnerListScreen(
+                        customerMobile: group.key,
+                        customerName: name,
+                      ),
+                    ),
                   ),
-                ),
-                title: Text(
-                  name,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(
-                  '${group.key}  •  $count ${count == 1 ? 'enquiry' : 'enquiries'}'
-                  '  •  last ${_timeAgo(latest['created_at'] as String?)}',
-                ),
-                trailing: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: latestStatus == 'done'
-                        ? Colors.green
-                        : latestStatus == 'replied'
-                            ? Colors.blue
-                            : Colors.teal,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    (latestStatus ?? 'new').toUpperCase(),
-                    style: const TextStyle(color: Colors.white, fontSize: 11),
-                  ),
-                ),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => OwnerListScreen(
-                      customerMobile: group.key,
-                      customerName: name,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: AppTheme.navy,
+                          child: Text(
+                            name.isNotEmpty ? name[0].toUpperCase() : '?',
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                  color: AppTheme.heading,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${group.key}  •  $count ${count == 1 ? 'enquiry' : 'enquiries'}'
+                                '  •  last ${_timeAgo(latest['created_at'] as String?)}',
+                                style:
+                                    const TextStyle(color: AppTheme.body),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: latestStatus == 'done'
+                                ? Colors.green
+                                : latestStatus == 'replied'
+                                    ? Colors.blue
+                                    : Colors.teal,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            (latestStatus ?? 'new').toUpperCase(),
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 11),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
 import '../my_enquiries.dart';
+import '../theme.dart';
 import 'enquiry_chat_screen.dart';
 
 /// CUSTOMER's own queries: the enquiries this phone submitted,
@@ -48,7 +49,7 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My queries')),
+      appBar: AppTheme.gradientAppBar(title: const Text('My queries')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _ids.isEmpty
@@ -58,7 +59,8 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                     child: Text(
                       "You haven't asked about anything yet.\nTap 'I am a Customer' to ask about a product.",
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, color: Colors.black54),
+                      style:
+                          TextStyle(fontSize: 16, color: AppTheme.body),
                     ),
                   ),
                 )
@@ -86,51 +88,80 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                         child: Text('No queries found.'),
                       );
                     }
-                    return ListView.separated(
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(12),
                       itemCount: rows.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
                       itemBuilder: (context, index) {
                         final e = rows[index];
                         final photoUrl = e['photo_url'] as String?;
-                        return ListTile(
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: photoUrl != null && photoUrl.isNotEmpty
-                                ? Image.network(
-                                    photoUrl,
-                                    width: 56,
-                                    height: 56,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) =>
-                                        const SizedBox(
-                                      width: 56,
-                                      height: 56,
-                                      child: Icon(Icons.image),
-                                    ),
-                                  )
-                                : const SizedBox(
-                                    width: 56,
-                                    height: 56,
-                                    child: Icon(Icons.image),
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: AppTheme.cardDecoration,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => EnquiryChatScreen(
+                                  enquiryId: e['id'] as String,
+                                  role: ChatRole.customer,
+                                  title: 'Your enquiry',
+                                ),
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: photoUrl != null &&
+                                            photoUrl.isNotEmpty
+                                        ? Image.network(
+                                            photoUrl,
+                                            width: 64,
+                                            height: 64,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                const SizedBox(
+                                              width: 64,
+                                              height: 64,
+                                              child: Icon(Icons.image),
+                                            ),
+                                          )
+                                        : const SizedBox(
+                                            width: 64,
+                                            height: 64,
+                                            child: Icon(Icons.image),
+                                          ),
                                   ),
-                          ),
-                          title: Text(
-                            e['description'] as String? ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600),
-                          ),
-                          subtitle: Text(
-                            '${_timeAgo(e['created_at'] as String?)}'
-                            '  •  ${(e['status'] as String?) ?? 'new'}',
-                          ),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => EnquiryChatScreen(
-                                enquiryId: e['id'] as String,
-                                role: ChatRole.customer,
-                                title: 'Your enquiry',
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          e['description'] as String? ?? '',
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 15,
+                                            color: AppTheme.heading,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${_timeAgo(e['created_at'] as String?)}'
+                                          '  •  ${(e['status'] as String?) ?? 'new'}',
+                                          style: const TextStyle(
+                                              color: AppTheme.body),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
