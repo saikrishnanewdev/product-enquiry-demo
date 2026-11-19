@@ -127,9 +127,18 @@ class PushNotifications {
     }
   }
 
+  /// Title/body of a push. The server sends DATA-ONLY messages
+  /// (title/body live in `data`), so read those first; fall back to
+  /// the notification payload if one is ever present.
+  static String _titleOf(RemoteMessage message) =>
+      message.data['title'] as String? ??
+      message.notification?.title ??
+      'Product Enquiry Demo';
+
+  static String _bodyOf(RemoteMessage message) =>
+      message.data['body'] as String? ?? message.notification?.body ?? '';
+
   static Future<void> _showForeground(RemoteMessage message) async {
-    final notification = message.notification;
-    if (notification == null) return;
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
         'enquiries',
@@ -139,9 +148,9 @@ class PushNotifications {
       ),
     );
     await _local.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
+      message.hashCode,
+      _titleOf(message),
+      _bodyOf(message),
       details,
     );
   }
@@ -151,8 +160,6 @@ class PushNotifications {
 /// Must be a top-level function. Kept small on purpose: just show it.
 @pragma('vm:entry-point')
 Future<void> _onBackgroundMessage(RemoteMessage message) async {
-  final notification = message.notification;
-  if (notification == null) return;
   const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
   const settings = InitializationSettings(android: androidSettings);
   final local = FlutterLocalNotificationsPlugin();
@@ -166,9 +173,9 @@ Future<void> _onBackgroundMessage(RemoteMessage message) async {
     ),
   );
   await local.show(
-    notification.hashCode,
-    notification.title,
-    notification.body,
+    message.hashCode,
+    PushNotifications._titleOf(message),
+    PushNotifications._bodyOf(message),
     details,
   );
 }

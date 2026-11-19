@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
 import '../notifications.dart';
+import 'customers_screen.dart';
 import 'enquiry_chat_screen.dart';
 
 /// BUSINESS OWNER portal: live list of customer enquiries.
@@ -10,7 +11,12 @@ import 'enquiry_chat_screen.dart';
 /// pops up, and the "New" badge counts it. Closed-app push notifications
 /// arrive via Firebase (see notifications.dart).
 class OwnerListScreen extends StatefulWidget {
-  const OwnerListScreen({super.key});
+  const OwnerListScreen({super.key, this.customerMobile, this.customerName});
+
+  /// When set, the list shows only this customer's enquiries
+  /// (opened from the Customers screen).
+  final String? customerMobile;
+  final String? customerName;
 
   @override
   State<OwnerListScreen> createState() => _OwnerListScreenState();
@@ -21,6 +27,31 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
   bool _firstLoad = true;
   String? _latestNewName;
   int _newCount = 0;
+  String _statusFilter = 'all';
+
+  Widget _statusPill(String? status) {
+    final label = switch (status) {
+      'replied' => 'REPLIED',
+      'done' => 'DONE',
+      _ => 'NEW',
+    };
+    final color = switch (status) {
+      'replied' => Colors.blue,
+      'done' => Colors.green,
+      _ => Colors.teal,
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(color: Colors.white, fontSize: 11),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -74,7 +105,7 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            const Text('Customer enquiries'),
+            Text(widget.customerName ?? 'Customer enquiries'),
             if (_newCount > 0) ...[
               const SizedBox(width: 8),
               CircleAvatar(
@@ -88,6 +119,17 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
             ],
           ],
         ),
+        actions: [
+          if (widget.customerMobile == null)
+            IconButton(
+              icon: const Icon(Icons.people),
+              tooltip: 'Customers',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                    builder: (_) => const CustomersScreen()),
+              ),
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -116,9 +158,33 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
                 ],
               ),
             ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: Row(
+              children: [
+                for (final f in const ['all', 'new', 'replied', 'done'])
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(f == 'all'
+                          ? 'All'
+                          : f[0].toUpperCase() + f.substring(1)),
+                      selected: _statusFilter == f,
+                      onSelected: (_) =>
+                          setState(() => _statusFilter = f),
+                    ),
+                  ),
+              ],
+            ),
+          ),
           Expanded(
             child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: supabase.from('enquiries').stream(primaryKey: ['id']),
+              stream: widget.customerMobile == null
+                  ? supabase.from('enquiries').stream(primaryKey: ['id'])
+                  : supabase
+                      .from('enquiries')
+                      .stream(primaryKey: ['id'])
+                      .eq('mobile', widget.customerMobile!),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -130,25 +196,32 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
                   ..sort((a, b) => (b['created_at'] as String)
                       .compareTo(a['created_at'] as String));
                 _checkForNew(enquiries);
-                if (enquiries.isEmpty) {
-                  return const Center(
+                final visible = _statusFilter == 'all'
+                    ? enquiries
+                    : enquiries
+                        .where((e) =>
+                            (e['status'] as String?) == _statusFilter)
+                        .toList();
+                if (visible.isEmpty) {
+                  return Center(
                     child: Padding(
-                      padding: EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(24),
                       child: Text(
-                        'No enquiries yet.\nWhen a customer asks about a product, it will appear here instantly.',
+                        enquiries.isEmpty
+                            ? 'No enquiries yet.\nWhen a customer asks about a product, it will appear here instantly.'
+                            : 'No $_statusFilter enquiries.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 16, color: Colors.black54),
+                        style: const TextStyle(fontSize: 16, color: Colors.black54),
                       ),
                     ),
                   );
                 }
                 return ListView.separated(
-                  itemCount: enquiries.length,
+                  itemCount: visible.length,
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (context, index) {
-                    final e = enquiries[index];
+                    final e = visible[index];
                     final photoUrl = e['photo_url'] as String?;
-                    final isNew = (e['status'] as String?) == 'new';
                     return ListTile(
                       leading: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
@@ -188,18 +261,7 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
                             style: const TextStyle(fontSize: 12, color: Colors.black54),
                           ),
                           const SizedBox(height: 4),
-                          if (isNew)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.teal,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Text(
-                                'NEW',
-                                style: TextStyle(color: Colors.white, fontSize: 11),
-                              ),
-                            ),
+                          _statusPill(e['status'] as String?),
                         ],
                       ),
                       onTap: () {

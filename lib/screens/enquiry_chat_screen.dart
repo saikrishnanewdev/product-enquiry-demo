@@ -57,6 +57,11 @@ class _EnquiryChatScreenState extends State<EnquiryChatScreen> {
         'sender': _sender,
         'message': text,
       });
+      // Keep the enquiry's status in step with the chat: the owner's
+      // reply marks it replied, a customer's message reopens it as new.
+      await supabase.from('enquiries').update({
+        'status': _isOwner ? 'replied' : 'new',
+      }).eq('id', widget.enquiryId);
       _messageController.clear();
     } on PostgrestException catch (e) {
       if (mounted) {
@@ -67,6 +72,19 @@ class _EnquiryChatScreenState extends State<EnquiryChatScreen> {
     } finally {
       if (mounted) setState(() => _sending = false);
     }
+  }
+
+  Future<void> _setStatus(String status) async {
+    await supabase
+        .from('enquiries')
+        .update({'status': status})
+        .eq('id', widget.enquiryId);
+    if (!mounted) return;
+    setState(() => _enquiry = {...?_enquiry, 'status': status});
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text(status == 'done' ? 'Marked done.' : 'Reopened.')),
+    );
   }
 
   Future<void> _callCustomer() async {
@@ -91,6 +109,22 @@ class _EnquiryChatScreenState extends State<EnquiryChatScreen> {
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
+          if (_isOwner && enquiry != null)
+            IconButton(
+              icon: Icon(
+                (enquiry['status'] as String?) == 'done'
+                    ? Icons.replay
+                    : Icons.check_circle_outline,
+              ),
+              tooltip: (enquiry['status'] as String?) == 'done'
+                  ? 'Reopen'
+                  : 'Mark done',
+              onPressed: () => _setStatus(
+                (enquiry['status'] as String?) == 'done'
+                    ? 'replied'
+                    : 'done',
+              ),
+            ),
           if (_isOwner && enquiry != null)
             IconButton(
               icon: const Icon(Icons.call),

@@ -79,8 +79,15 @@ Deno.serve(async (req) => {
       const sender = record.sender as string;
       const enquiryId = String(record.enquiry_id ?? "");
       body = (record.message as string ?? "").slice(0, 100);
+      // Look up who this chat belongs to so the push can name them.
+      const { data: enq } = await supabase
+        .from("enquiries")
+        .select("customer_name")
+        .eq("id", enquiryId)
+        .single();
+      const customerName = (enq?.customer_name as string) ?? "a customer";
       if (sender === "customer") {
-        title = "New message from a customer";
+        title = `New message from ${customerName}`;
         tokens = await tokensFor(supabase, "owner");
       } else {
         title = "Reply from the shop";
@@ -100,10 +107,14 @@ Deno.serve(async (req) => {
       );
     }
 
+    // DATA-ONLY message (no `notification` field): Android does NOT
+    // auto-display it, so the app shows it exactly once — in the
+    // foreground handler when open, in the background handler when
+    // closed. Sending a `notification` payload as well made the phone
+    // show every push twice (once by the system, once by the app).
     const result = await messaging.sendEachForMulticast({
       tokens,
-      notification: { title, body },
-      data,
+      data: { ...data, title, body },
       android: { priority: "high" },
     });
 
