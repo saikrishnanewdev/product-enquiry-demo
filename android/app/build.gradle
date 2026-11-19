@@ -1,6 +1,11 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
+    // Reads google-services.json and generates the Firebase values
+    // (api key, project id, app id) the app needs at startup.
+    // Without this line Firebase fails to start with
+    // "Failed to load FirebaseOptions from resource".
+    id "com.google.gms.google-services"
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
 }
