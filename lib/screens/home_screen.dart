@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../config.dart';
 import '../notifications.dart';
+import '../owner_pin.dart';
 import 'customer_enquiry_screen.dart';
+import 'my_enquiries_screen.dart';
 import 'owner_list_screen.dart';
+import 'owner_pin_screen.dart';
 
 /// First screen: pick a role. Demo simplicity — both portals live in
 /// one install, so Sai can demo the customer side on one phone and the
@@ -89,14 +92,41 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const OwnerListScreen()),
-              ),
+              onPressed: () async {
+                // The owner portal is protected by a 4-digit PIN:
+                // first visit sets it, later visits ask for it.
+                final navigator = Navigator.of(context);
+                final hasPin = await OwnerPin.hasPin();
+                final ok = await navigator.push<bool>(
+                  MaterialPageRoute(
+                    builder: (_) => OwnerPinScreen(
+                      mode: hasPin
+                          ? OwnerPinMode.verify
+                          : OwnerPinMode.set,
+                    ),
+                  ),
+                );
+                if (ok == true && mounted) {
+                  navigator.push(
+                    MaterialPageRoute(
+                        builder: (_) => const OwnerListScreen()),
+                  );
+                }
+              },
               icon: const Icon(Icons.business),
               label: const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
                 child: Text('I am the Business Owner', style: TextStyle(fontSize: 18)),
               ),
+            ),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                    builder: (_) => const MyEnquiriesScreen()),
+              ),
+              icon: const Icon(Icons.history),
+              label: const Text('My queries', style: TextStyle(fontSize: 16)),
             ),
             const SizedBox(height: 32),
             // Live push status — if a push ever goes missing, this line

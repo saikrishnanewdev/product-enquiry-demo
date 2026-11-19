@@ -3,6 +3,7 @@ import '../main.dart';
 import '../notifications.dart';
 import 'customers_screen.dart';
 import 'enquiry_chat_screen.dart';
+import 'owner_pin_screen.dart';
 
 /// BUSINESS OWNER portal: live list of customer enquiries.
 ///
@@ -120,6 +121,27 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.lock_outline),
+            tooltip: 'Change PIN',
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final ok = await navigator.push<bool>(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      const OwnerPinScreen(mode: OwnerPinMode.verify),
+                ),
+              );
+              if (ok == true && mounted) {
+                navigator.push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const OwnerPinScreen(mode: OwnerPinMode.set),
+                  ),
+                );
+              }
+            },
+          ),
           if (widget.customerMobile == null)
             IconButton(
               icon: const Icon(Icons.people),

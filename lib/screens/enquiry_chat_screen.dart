@@ -91,8 +91,11 @@ class _EnquiryChatScreenState extends State<EnquiryChatScreen> {
     final mobile = _enquiry?['mobile'] as String?;
     if (mobile == null || mobile.isEmpty) return;
     final uri = Uri(scheme: 'tel', path: mobile);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the dialer.')),
+      );
     }
   }
 
@@ -236,6 +239,33 @@ class _EnquiryChatScreenState extends State<EnquiryChatScreen> {
   }
 }
 
+/// Full-screen product photo (tap the small photo in the chat header).
+/// Pinch to zoom, drag to pan, back button to close.
+class _FullScreenImage extends StatelessWidget {
+  const _FullScreenImage({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: const Text('Product photo'),
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 4,
+          child: Image.network(url),
+        ),
+      ),
+    );
+  }
+}
+
 class _EnquiryHeader extends StatelessWidget {
   const _EnquiryHeader({required this.enquiry});
 
@@ -251,15 +281,22 @@ class _EnquiryHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (photoUrl != null && photoUrl.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                photoUrl,
-                width: 72,
-                height: 72,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    const SizedBox(width: 72, height: 72, child: Icon(Icons.image)),
+            GestureDetector(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => _FullScreenImage(url: photoUrl),
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  photoUrl,
+                  width: 72,
+                  height: 72,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      const SizedBox(width: 72, height: 72, child: Icon(Icons.image)),
+                ),
               ),
             ),
           const SizedBox(width: 12),

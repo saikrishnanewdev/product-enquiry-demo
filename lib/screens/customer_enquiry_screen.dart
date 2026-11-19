@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main.dart';
+import '../my_enquiries.dart';
 import '../notifications.dart';
 import 'enquiry_chat_screen.dart';
 
@@ -107,6 +108,10 @@ class _CustomerEnquiryScreenState extends State<CustomerEnquiryScreen> {
           .select('id')
           .single();
       final enquiryId = inserted['id'] as String;
+
+      // Remember this enquiry on the phone, so the customer can find
+      // it again from "My queries" even after going back.
+      await MyEnquiries.add(enquiryId);
 
       // This phone gets a push when the shop replies to this enquiry.
       await PushNotifications.registerToken(
