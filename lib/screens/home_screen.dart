@@ -1,13 +1,29 @@
 import 'package:flutter/material.dart';
 import '../config.dart';
+import '../notifications.dart';
 import 'customer_enquiry_screen.dart';
 import 'owner_list_screen.dart';
 
 /// First screen: pick a role. Demo simplicity — both portals live in
 /// one install, so Sai can demo the customer side on one phone and the
 /// owner side on another.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Ask for notification permission once the screen is visible:
+    // asking before the app draws can be silently dropped by Android.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PushNotifications.askPermissionAndRegister();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +96,17 @@ class HomeScreen extends StatelessWidget {
               label: const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
                 child: Text('I am the Business Owner', style: TextStyle(fontSize: 18)),
+              ),
+            ),
+            const SizedBox(height: 32),
+            // Live push status — if a push ever goes missing, this line
+            // says on the phone itself where it got stuck.
+            ValueListenableBuilder<String>(
+              valueListenable: PushNotifications.statusNotifier,
+              builder: (context, status, _) => Text(
+                'Notifications: $status',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, color: Colors.black54),
               ),
             ),
           ],

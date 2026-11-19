@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -25,10 +26,22 @@ class PushNotifications {
 
   static bool get isReady => _ready;
 
+  /// Live status shown on the home screen so a missing push can be
+  /// diagnosed on the phone itself instead of guessing.
+  static final ValueNotifier<String> statusNotifier =
+      ValueNotifier<String>('starting…');
+  static String get status => statusNotifier.value;
+
   static Future<void> init() async {
     try {
       await Firebase.initializeApp();
-
+    } catch (e) {
+      statusNotifier.value = 'Firebase failed to start: $e';
+      // ignore: avoid_print
+      print('Push notifications unavailable: $e');
+      return;
+    }
+    try {
       const androidSettings =
           AndroidInitializationSettings('@mipmap/ic_launcher');
       const settings = InitializationSettings(android: androidSettings);
@@ -37,9 +50,6 @@ class PushNotifications {
       // Background handler: shows the push when the app is closed.
       FirebaseMessaging.onBackgroundMessage(_onBackgroundMessage);
 
-      // Permission (Android 13+ asks the user once).
-      await FirebaseMessaging.instance.requestPermission();
-
       // Foreground messages: show them as a local notification.
       FirebaseMessaging.onMessage.listen(_showForeground);
 
@@ -47,10 +57,37 @@ class PushNotifications {
       FirebaseMessaging.instance.onTokenRefresh.listen((_) => _saveToken());
 
       _ready = true;
+      statusNotifier.value = 'ready — waiting for permission';
     } catch (e) {
-      // Push stays off, the rest of the app keeps working.
+      statusNotifier.value = 'setup failed: $e';
       // ignore: avoid_print
       print('Push notifications unavailable: $e');
+    }
+  }
+
+  /// Ask for notification permission and save this phone's push token.
+  /// Call this AFTER the first screen is visible: asking before the
+  /// app has drawn can be silently dropped by Android, which is why
+  /// the permission prompt never appeared in earlier builds.
+  static Future<void> askPermissionAndRegister() async {
+    if (!_ready) return;
+    try {
+      // Both calls ask for the Android 13+ notification permission;
+      // whichever shows the prompt is enough.
+      await _local
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestNotificationsPermission();
+      await FirebaseMessaging.instance.requestPermission();
+      if (_lastRole == null) {
+        statusNotifier.value =
+            'permission done — open Customer or Owner to finish registering';
+        return;
+      }
+      statusNotifier.value = 'permission done — saving token…';
+      await _saveToken();
+    } catch (e) {
+      statusNotifier.value = 'permission request failed: $e';
     }
   }
 
@@ -69,7 +106,11 @@ class PushNotifications {
     if (!_ready || _lastRole == null) return;
     try {
       final token = await FirebaseMessaging.instance.getToken();
-      if (token == null) return;
+      if (token == null) {
+        statusNotifier.value =
+            'no token from Firebase (Play services missing?)';
+        return;
+      }
       await Supabase.instance.client.from('device_tokens').upsert(
         {
           'role': _lastRole,
@@ -78,7 +119,9 @@ class PushNotifications {
         },
         onConflict: 'token',
       );
+      statusNotifier.value = 'ON — this phone is registered for pushes';
     } catch (e) {
+      statusNotifier.value = 'could not save token: $e';
       // ignore: avoid_print
       print('Could not save push token: $e');
     }

@@ -27,6 +27,9 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
     super.initState();
     // This phone gets a push for every new enquiry, even with the app closed.
     PushNotifications.registerToken(role: 'owner');
+    // Ask for the notification permission here too, in case the
+    // home-screen ask was missed.
+    PushNotifications.askPermissionAndRegister();
   }
 
   void _checkForNew(List<Map<String, dynamic>> enquiries) {
