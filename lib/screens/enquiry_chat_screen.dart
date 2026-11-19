@@ -115,7 +115,12 @@ class _EnquiryChatScreenState extends State<EnquiryChatScreen> {
                 if (snapshot.hasError) {
                   return Center(child: Text('Could not load chat: ${snapshot.error}'));
                 }
+                // The realtime stream can briefly deliver a fresh
+                // message twice; show each id once so the newest
+                // bubble never doubles up.
+                final seenIds = <String>{};
                 final messages = List<Map<String, dynamic>>.from(snapshot.data ?? [])
+                  ..retainWhere((m) => seenIds.add(m['id'] as String))
                   ..sort((a, b) => (a['created_at'] as String)
                       .compareTo(b['created_at'] as String));
                 if (messages.isEmpty) {
