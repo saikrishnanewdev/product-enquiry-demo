@@ -7,9 +7,8 @@ import 'enquiry_chat_screen.dart';
 ///
 /// Uses Supabase Realtime: when a customer submits an enquiry while this
 /// screen is open, the new row appears at the top immediately, a banner
-/// pops up, and the "New" badge counts it. (True push notifications when
-/// the app is closed need Firebase setup — out of scope for this demo.
-/// See README.md.)
+/// pops up, and the "New" badge counts it. Closed-app push notifications
+/// arrive via Firebase (see notifications.dart).
 class OwnerListScreen extends StatefulWidget {
   const OwnerListScreen({super.key});
 

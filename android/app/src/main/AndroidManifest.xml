@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Network access for Supabase -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Notifications (Android 13+): the app asks for this on first launch.
+         Without this line the system never shows the permission prompt. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Camera + gallery for product photos -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
