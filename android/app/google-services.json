@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:191340638895:android:eccb0e03b53da2f9319a5a",
+        "android_client_info": {
+          "package_name": "com.automatebusinesssolutions.product_enquiry_demo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEPnIl5RfUn1cBBSBUPrFjW_OtR4CtyO4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:191340638895:android:aef3598c7ea2ada3319a5a",
         "android_client_info": {
           "package_name": "com.automatebusinesssolutions.productenquiry_demo"
