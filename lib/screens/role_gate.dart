@@ -9,13 +9,16 @@ import 'owner_change_password_screen.dart';
 import 'owner_list_screen.dart';
 import 'owner_login_screen.dart';
 import 'owner_pin_screen.dart';
-import 'role_pick_screen.dart';
+import 'welcome_screen.dart';
 
 /// Root screen: reads the saved role and opens the right portal.
 ///
-/// - No role saved yet -> [RolePickScreen] (choose once).
+/// - No role saved yet -> [WelcomeScreen] (Get Started = customer;
+///   the owner enters through the hidden logo tap).
 /// - Customer -> [CustomerHomeScreen].
 /// - Owner -> [OwnerGate] (PIN, then the enquiries list).
+/// Phones that already saved a role open straight into their portal
+/// — the welcome screen only ever shows on a fresh install.
 class RoleGate extends StatelessWidget {
   const RoleGate({super.key});
 
@@ -66,7 +69,7 @@ class RoleGate extends StatelessWidget {
         return switch (snapshot.data) {
           AppRole.customer => const CustomerHomeScreen(),
           AppRole.owner => const OwnerGate(),
-          _ => const RolePickScreen(),
+          _ => const WelcomeScreen(),
         };
       },
     );
@@ -82,7 +85,7 @@ class RoleGate extends StatelessWidget {
 ///    change before entering.
 /// 3. The 4-digit PIN is the quick unlock after that; the owner
 ///    stays signed in, so the password is not asked every time.
-/// Backing out of any step forgets the role and shows the picker.
+/// Backing out of any step forgets the role and shows the welcome screen.
 class OwnerGate extends StatefulWidget {
   const OwnerGate({super.key});
 

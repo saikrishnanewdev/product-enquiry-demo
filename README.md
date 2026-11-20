@@ -5,10 +5,11 @@ available?" with a photo, and the business owner replies inside the app.
 
 ## What it does
 
-One app, two sides — on first launch the phone asks "who is using this
-phone?" and remembers the choice, so the owner only ever sees the owner
-portal and customers only ever see the customer portal. (The swap icon
-in the AppBar switches role again; the owner side asks for the PIN first.)
+One app, two sides — on first launch a welcome screen offers "Get
+Started" (customer side). The owner side is reached only through a
+hidden tap on the welcome logo. The phone remembers the role, so the
+owner only ever sees the owner portal and customers only ever see
+the customer portal, and there is no in-app way to switch roles.
 
 **Customer portal**
 - Take a photo or pick one from the gallery
@@ -111,7 +112,7 @@ repo's **Actions** tab.
 - `lib/config.dart` — Supabase URL + anon key (placeholders)
 - `lib/app_role.dart` — the phone's saved role (customer / owner)
 - `lib/screens/role_gate.dart` — first screen: opens the saved portal
-- `lib/screens/role_pick_screen.dart` — first-run "who is using this phone?"
+- `lib/screens/welcome_screen.dart` — first-run welcome screen (Get Started = customer; hidden logo tap = owner)
 - `lib/screens/customer_home_screen.dart` — customer portal home
 - `lib/screens/customer_enquiry_screen.dart` — photo + enquiry form
 - `lib/screens/enquiry_chat_screen.dart` — chat thread (both sides)

@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import '../app_role.dart';
 import '../notifications.dart';
 import '../theme.dart';
 import 'customer_enquiry_screen.dart';
 import 'my_enquiries_screen.dart';
-import 'role_gate.dart';
 
 /// CUSTOMER portal home: ask about a product, or find past queries.
 ///
 /// Shown when this phone picked the customer role. The owner side
-/// is never reachable from here — switching role needs the swap
-/// icon in the AppBar (with a confirm step).
+/// is never reachable from here — there is no role switcher in the
+/// app; the role is set once and only reinstalling clears it.
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
 
@@ -29,48 +27,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     });
   }
 
-  Future<void> _switchRole() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Switch role?'),
-        content: const Text(
-          'This phone will forget it is a customer and ask again '
-          'whether it is the shop owner or a customer.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Switch'),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true || !mounted) return;
-    await AppRole.clear();
-    if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const RoleGate()),
-      (_) => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppTheme.gradientAppBar(
         title: const Text('Product Enquiry Demo'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.swap_horiz),
-            tooltip: 'Switch role',
-            onPressed: _switchRole,
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

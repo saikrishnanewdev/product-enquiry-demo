@@ -1,10 +1,10 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Which portal this phone uses. Chosen once on first launch
-/// ("one app, choose role once") and remembered on the phone.
-/// The owner picks owner, customers pick customer; the other
-/// portal is never shown. Switching role clears this (with a
-/// confirm step, and the owner's PIN first).
+/// Which portal this phone uses. Set once on first launch — the
+/// customer taps "Get Started" on the welcome screen, the owner
+/// enters through the hidden logo tap — and remembered on the phone.
+/// The other portal is never shown, and there is no in-app way to
+/// change the role; only reinstalling the app clears it.
 class AppRole {
   static const _key = 'app_role';
   static const customer = 'customer';
