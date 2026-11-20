@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:local_auth/local_auth.dart';
 import '../owner_pin.dart';
 import '../theme.dart';
 
@@ -24,9 +25,79 @@ class OwnerPinScreen extends StatefulWidget {
 class _OwnerPinScreenState extends State<OwnerPinScreen> {
   final _pinController = TextEditingController();
   final _confirmController = TextEditingController();
+  final _auth = LocalAuthentication();
   String? _error;
+  // Verify mode only: fingerprint / face unlock, with the PIN as fallback.
+  bool _biometricsAvailable = false;
+  String _biometricLabel = 'fingerprint';
+  bool _biometricPrompted = false;
 
   bool get _isSet => widget.mode == OwnerPinMode.set;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_isSet) {
+      // Offer the system biometric prompt once, right after the screen
+      // opens. If it fails or is cancelled, the PIN keypad is right there.
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _tryBiometrics(firstTime: true));
+    }
+  }
+
+  /// True when the phone has enrolled biometrics the app can use.
+  Future<void> _checkBiometrics() async {
+    try {
+      final canCheck = await _auth.canCheckBiometrics;
+      if (!canCheck || !mounted) return;
+      final available = await _auth.getAvailableBiometrics();
+      if (!mounted) return;
+      if (available.isEmpty) return;
+      final hasFace = available.contains(BiometricType.face);
+      final hasFingerprint = available.contains(BiometricType.fingerprint);
+      setState(() {
+        _biometricsAvailable = true;
+        _biometricLabel = hasFace && hasFingerprint
+            ? 'fingerprint or face'
+            : hasFace
+                ? 'face'
+                : 'fingerprint';
+      });
+    } on PlatformException {
+      // Biometrics not usable on this phone — PIN only, silently.
+    }
+  }
+
+  /// Shows the system fingerprint / face dialog. On success this
+  /// unlocks exactly like a correct PIN. Anything else leaves the
+  /// owner on the PIN screen. With [firstTime] the dialog is only
+  /// shown once (the auto-prompt when the screen opens); the button
+  /// can always ask again.
+  Future<void> _tryBiometrics({bool firstTime = false}) async {
+    if (firstTime) {
+      if (_biometricPrompted || !mounted) return;
+      _biometricPrompted = true;
+    }
+    await _checkBiometrics();
+    if (!_biometricsAvailable || !mounted) return;
+    final navigator = Navigator.of(context);
+    bool ok = false;
+    try {
+      ok = await _auth.authenticate(
+        localizedReason:
+            'Unlock the owner portal with your $_biometricLabel.',
+        options: const AuthenticationOptions(biometricOnly: true),
+      );
+    } on PlatformException {
+      if (mounted) {
+        setState(() =>
+            _error = 'Biometric unlock is not available. Use your PIN.');
+      }
+      return;
+    }
+    if (ok) navigator.pop(true);
+    // Failed or cancelled: stay on the PIN screen, no error shown.
+  }
 
   Future<void> _submit() async {
     final pin = _pinController.text.trim();
@@ -138,6 +209,14 @@ class _OwnerPinScreenState extends State<OwnerPinScreen> {
                     label: _isSet ? 'Save PIN' : 'Unlock',
                     onPressed: _submit,
                   ),
+                  if (!_isSet && _biometricsAvailable) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _tryBiometrics,
+                      icon: const Icon(Icons.fingerprint),
+                      label: Text('Unlock with $_biometricLabel'),
+                    ),
+                  ],
                 ],
               ),
             ),

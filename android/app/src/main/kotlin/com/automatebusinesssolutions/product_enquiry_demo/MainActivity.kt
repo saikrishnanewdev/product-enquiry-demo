@@ -1,5 +1,7 @@
 package com.automatebusinesssolutions.product_enquiry_demo
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity: FlutterActivity()
+// FlutterFragmentActivity (not FlutterActivity): local_auth needs a
+// FragmentActivity host for the system biometric prompt.
+class MainActivity: FlutterFragmentActivity()

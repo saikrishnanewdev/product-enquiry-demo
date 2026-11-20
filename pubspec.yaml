@@ -24,6 +24,9 @@ dependencies:
   # Remembers the customer's own enquiries on their phone, so they can
   # find their queries again after going back (no login needed).
   shared_preferences: ^2.3.0
+  # Fingerprint / face unlock for the owner PIN screen (PIN stays the
+  # fallback). Uses the phone's own enrolled biometrics.
+  local_auth: ^2.3.0
 
 dev_dependencies:
   flutter_test:
