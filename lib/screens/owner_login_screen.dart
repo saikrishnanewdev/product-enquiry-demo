@@ -23,6 +23,25 @@ class _OwnerLoginScreenState extends State<OwnerLoginScreen> {
   bool _busy = false;
   String? _error;
 
+  /// Network failures (e.g. no internet) surface as AuthException or
+  /// generic exceptions whose message mentions the network — they must
+  /// not be reported as wrong credentials.
+  static bool _isNetworkError(Object e) {
+    final message = e.toString().toLowerCase();
+    const indicators = [
+      'socketexception',
+      'failed host lookup',
+      'network is unreachable',
+      'connection refused',
+      'failed to fetch',
+      'network request failed',
+      'clientexception',
+      'connection timed out',
+      'no address associated with hostname',
+    ];
+    return indicators.any(message.contains);
+  }
+
   Future<void> _signIn() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -38,18 +57,22 @@ class _OwnerLoginScreenState extends State<OwnerLoginScreen> {
       await supabase.auth
           .signInWithPassword(email: email, password: password);
       if (mounted) Navigator.of(context).pop(true);
-    } on AuthException {
+    } on AuthException catch (e) {
       if (mounted) {
         setState(() {
           _busy = false;
-          _error = 'Wrong email or password. Try again.';
+          _error = _isNetworkError(e)
+              ? 'No internet connection. Check your connection and try again.'
+              : 'Wrong email or password. Try again.';
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _busy = false;
-          _error = 'Could not sign in: $e';
+          _error = _isNetworkError(e)
+              ? 'No internet connection. Check your connection and try again.'
+              : 'Could not sign in: $e';
         });
       }
     }
