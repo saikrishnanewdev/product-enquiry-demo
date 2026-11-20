@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
@@ -37,7 +38,8 @@ class _OwnerPinScreenState extends State<OwnerPinScreen> {
   @override
   void initState() {
     super.initState();
-    if (!_isSet) {
+    // local_auth has no web implementation — PIN only on web.
+    if (!_isSet && !kIsWeb) {
       // Offer the system biometric prompt once, right after the screen
       // opens. If it fails or is cancelled, the PIN keypad is right there.
       WidgetsBinding.instance
@@ -47,6 +49,8 @@ class _OwnerPinScreenState extends State<OwnerPinScreen> {
 
   /// True when the phone has enrolled biometrics the app can use.
   Future<void> _checkBiometrics() async {
+    // local_auth has no web implementation — PIN only on web.
+    if (kIsWeb) return;
     try {
       final canCheck = await _auth.canCheckBiometrics;
       if (!canCheck || !mounted) return;
@@ -74,6 +78,8 @@ class _OwnerPinScreenState extends State<OwnerPinScreen> {
   /// shown once (the auto-prompt when the screen opens); the button
   /// can always ask again.
   Future<void> _tryBiometrics({bool firstTime = false}) async {
+    // local_auth has no web implementation — PIN only on web.
+    if (kIsWeb) return;
     if (firstTime) {
       if (_biometricPrompted || !mounted) return;
       _biometricPrompted = true;

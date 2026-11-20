@@ -33,6 +33,12 @@ class PushNotifications {
   static String get status => statusNotifier.value;
 
   static Future<void> init() async {
+    // No Firebase web config exists, and FCM is Android-only here:
+    // on web push is simply off (the home screen says so).
+    if (kIsWeb) {
+      statusNotifier.value = 'not available on web — open the app to see replies';
+      return;
+    }
     try {
       await Firebase.initializeApp();
     } catch (e) {

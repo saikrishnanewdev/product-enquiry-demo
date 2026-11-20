@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -25,6 +25,9 @@ class _CustomerEnquiryScreenState extends State<CustomerEnquiryScreen> {
   final _picker = ImagePicker();
 
   XFile? _photo;
+  // Photo bytes, kept in memory: `dart:io` File does not exist on web,
+  // so upload and preview both go through bytes (works on mobile too).
+  Uint8List? _photoBytes;
   bool _sending = false;
 
   @override
@@ -42,7 +45,11 @@ class _CustomerEnquiryScreenState extends State<CustomerEnquiryScreen> {
       imageQuality: 80,
     );
     if (photo != null) {
-      setState(() => _photo = photo);
+      final bytes = await photo.readAsBytes();
+      setState(() {
+        _photo = photo;
+        _photoBytes = bytes;
+      });
     }
   }
 
@@ -87,11 +94,12 @@ class _CustomerEnquiryScreenState extends State<CustomerEnquiryScreen> {
     setState(() => _sending = true);
     try {
       // 1. Upload the photo to Supabase Storage.
+      // uploadBinary works on mobile and web alike (no dart:io File).
       final fileName =
           '${DateTime.now().millisecondsSinceEpoch}_${_photo!.name}';
-      await supabase.storage.from('enquiry-photos').upload(
+      await supabase.storage.from('enquiry-photos').uploadBinary(
             fileName,
-            File(_photo!.path),
+            _photoBytes!,
           );
       final photoUrl =
           supabase.storage.from('enquiry-photos').getPublicUrl(fileName);
@@ -200,7 +208,7 @@ class _CustomerEnquiryScreenState extends State<CustomerEnquiryScreen> {
                     : Stack(
                         fit: StackFit.expand,
                         children: [
-                          Image.file(File(_photo!.path), fit: BoxFit.cover),
+                          Image.memory(_photoBytes!, fit: BoxFit.cover),
                           const Positioned(
                             right: 8,
                             top: 8,
